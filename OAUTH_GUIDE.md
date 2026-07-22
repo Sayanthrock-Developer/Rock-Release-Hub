@@ -53,6 +53,20 @@ Send `Accept: application/json` for both OAuth requests.
 6. Encrypt the access token with an Android Keystore AES-GCM key before saving it locally.
 7. Attach the token to GitHub API requests through the `Authorization: Bearer` header.
 
+## Troubleshooting: unable to resolve `github.com`
+
+When the browser shows **Congratulations, you're all set**, GitHub has approved the device code. An app error such as `Unable to resolve host "github.com"` is a device DNS or network interruption, not an OAuth registration failure.
+
+Rock Release Hub now keeps the approved device-code session active and automatically retries temporary DNS, timeout, and connection failures until the code expires.
+
+For a persistent failure:
+
+1. Switch between Wi-Fi and mobile data.
+2. Temporarily disable a VPN, firewall, ad blocker, or custom Private DNS provider.
+3. Set Android **Private DNS** to **Automatic** or **Off**, then retry.
+4. Confirm that Android date and time are automatic.
+5. Reopen Rock Release Hub and start a fresh sign-in only after the previous device code has expired or been cancelled.
+
 ## Local development
 
 Keep local OAuth configuration out of version control. Do not commit `local.properties` or any generated secrets.
