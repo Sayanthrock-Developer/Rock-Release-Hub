@@ -1,15 +1,48 @@
-# GitHub OAuth Guide
+# GitHub OAuth Device Flow Setup
 
-Rock Release Hub utilizes GitHub's Device Flow for authentication.
+Rock Release Hub uses GitHub OAuth Device Flow for native Android authentication. It does not use a browser callback to return the authorization result to the app.
 
-## Registering the App
-1. Go to your GitHub account settings -> Developer settings -> OAuth Apps.
-2. Click "New OAuth App".
-3. Name it "Rock Release Hub" (or a test variation).
-4. For Homepage URL, enter `https://github.com`.
-5. For Authorization callback URL, enter `rockreleasehub://oauth2`.
-6. Click "Register application".
-7. Check "Enable Device Flow".
+## Register the OAuth App
 
-## Using in the App
-The Client ID should be injected into the application securely to handle the device flow endpoints at `https://github.com/login/device/code`.
+Open **GitHub → Settings → Developer settings → OAuth Apps → New OAuth App** and enter:
+
+- **Application name:** `Rock Release Hub`
+- **Homepage URL:** `https://github.com/Sayanthrock-Developer/Rock-Release-Hub`
+- **Application description:** `A native Android control centre for GitHub releases, workflow builds, artifacts, APK inspection, downloads, and application updates.`
+- **Authorization callback URL:** `https://github.com/Sayanthrock-Developer/Rock-Release-Hub`
+- **Enable Device Flow:** checked
+
+The callback URL is required by GitHub's registration form, but Rock Release Hub does not use it during Device Flow authentication.
+
+Select **Register application**, then copy the generated **Client ID**.
+
+## Security rules
+
+- Use only the OAuth App **Client ID** in the Android application.
+- Never bundle the OAuth App **Client Secret** in the APK, repository, Gradle files, logs, or GitHub Actions artifacts.
+- Store the returned access token with Android Keystore-backed encrypted storage.
+- Never print access tokens in logs.
+
+## Device Flow endpoints
+
+The Android client should use:
+
+- Device code request: `POST https://github.com/login/device/code`
+- Access-token polling: `POST https://github.com/login/oauth/access_token`
+- Verification page: `https://github.com/login/device`
+
+Send `Accept: application/json` for both OAuth requests.
+
+## Required implementation flow
+
+1. Request a device code using the Client ID and required scopes.
+2. Display the returned `user_code` and `verification_uri`.
+3. Open the verification page in the user's browser.
+4. Poll the access-token endpoint using the server-provided interval.
+5. Handle `authorization_pending`, `slow_down`, `expired_token`, and `access_denied` without exposing secrets.
+6. Encrypt the access token before saving it locally.
+7. Validate the token by loading the authenticated GitHub account.
+
+## Local development
+
+Keep local OAuth configuration out of version control. Do not commit `local.properties` or any generated secrets.
