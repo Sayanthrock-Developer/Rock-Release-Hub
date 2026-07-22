@@ -5,12 +5,17 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val githubClientId = providers.gradleProperty("GITHUB_CLIENT_ID")
+    .orElse("Ov23liqwsog4A61HCRXB")
+    .get()
+
 android {
     namespace = "com.sayanthrock.rockreleasehub.feature.auth"
     compileSdk = 34
 
     defaultConfig {
         minSdk = 29
+        buildConfigField("String", "GITHUB_CLIENT_ID", "\"$githubClientId\"")
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -21,6 +26,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.11"
@@ -30,6 +36,7 @@ android {
 dependencies {
     implementation(project(":core-model"))
     implementation(project(":core-common"))
+    implementation(project(":core-network"))
     implementation(project(":core-designsystem"))
 
     implementation(platform(libs.androidx.compose.bom))
@@ -38,6 +45,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.kotlinx.coroutines.android)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

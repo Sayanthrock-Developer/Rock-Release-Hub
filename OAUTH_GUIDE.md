@@ -16,6 +16,16 @@ The callback URL is required by GitHub's registration form, but Rock Release Hub
 
 Select **Register application**, then copy the generated **Client ID**.
 
+## Project configuration
+
+The registered OAuth Client ID is configured in the `feature-auth` module. A different OAuth App can be used without editing source code by passing a Gradle property:
+
+```bash
+./gradlew assembleDebug -PGITHUB_CLIENT_ID=YOUR_CLIENT_ID
+```
+
+A GitHub OAuth Client ID is a public application identifier and is included in the APK. The Client Secret must never be included.
+
 ## Security rules
 
 - Use only the OAuth App **Client ID** in the Android application.
@@ -25,7 +35,7 @@ Select **Register application**, then copy the generated **Client ID**.
 
 ## Device Flow endpoints
 
-The Android client should use:
+The Android client uses:
 
 - Device code request: `POST https://github.com/login/device/code`
 - Access-token polling: `POST https://github.com/login/oauth/access_token`
@@ -33,15 +43,15 @@ The Android client should use:
 
 Send `Accept: application/json` for both OAuth requests.
 
-## Required implementation flow
+## Authentication flow
 
 1. Request a device code using the Client ID and required scopes.
 2. Display the returned `user_code` and `verification_uri`.
 3. Open the verification page in the user's browser.
 4. Poll the access-token endpoint using the server-provided interval.
 5. Handle `authorization_pending`, `slow_down`, `expired_token`, and `access_denied` without exposing secrets.
-6. Encrypt the access token before saving it locally.
-7. Validate the token by loading the authenticated GitHub account.
+6. Encrypt the access token with an Android Keystore AES-GCM key before saving it locally.
+7. Attach the token to GitHub API requests through the `Authorization: Bearer` header.
 
 ## Local development
 

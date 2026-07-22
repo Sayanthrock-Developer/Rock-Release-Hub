@@ -1,6 +1,7 @@
 package com.sayanthrock.rockreleasehub.core.network.di
 
 import com.sayanthrock.rockreleasehub.core.network.api.GitHubApiService
+import com.sayanthrock.rockreleasehub.core.network.auth.AccessTokenStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,11 +26,25 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(accessTokenStore: AccessTokenStore): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = HttpLoggingInterceptor.Level.BASIC
+            redactHeader("Authorization")
         }
+
         return OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val requestBuilder = chain.request().newBuilder()
+                    .header("Accept", "application/vnd.github+json")
+                    .header("X-GitHub-Api-Version", "2022-11-28")
+                    .header("User-Agent", "Rock-Release-Hub-Android")
+
+                accessTokenStore.getAccessToken()
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { token -> requestBuilder.header("Authorization", "Bearer $token") }
+
+                chain.proceed(requestBuilder.build())
+            }
             .addInterceptor(logging)
             .build()
     }
