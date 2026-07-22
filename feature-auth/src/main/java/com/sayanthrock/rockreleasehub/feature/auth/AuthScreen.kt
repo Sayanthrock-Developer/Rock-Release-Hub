@@ -130,9 +130,10 @@ fun AuthScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "The code expires in about $expiryMinutes minutes.",
+                        text = "Temporary DNS or network interruptions are retried automatically. The code expires in about $expiryMinutes minutes.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     TextButton(onClick = viewModel::cancelLogin) {
