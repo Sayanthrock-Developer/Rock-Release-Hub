@@ -37,7 +37,7 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
         withContext(Dispatchers.IO) {
             require(clientId.isNotBlank()) { "GitHub OAuth Client ID is missing." }
 
-            val response = postForm(
+            val response = postFormWithRetry(
                 url = DEVICE_CODE_URL,
                 fields = mapOf(
                     "client_id" to clientId,
@@ -61,18 +61,38 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
     ): String = withContext(Dispatchers.IO) {
         val deadline = SystemClock.elapsedRealtime() + authorization.expiresInSeconds * 1_000L
         var pollingInterval = authorization.intervalSeconds.coerceAtLeast(MINIMUM_INTERVAL_SECONDS)
+        var networkRetryDelayMillis = INITIAL_NETWORK_RETRY_DELAY_MILLIS
+        var lastNetworkFailure: IOException? = null
 
         while (SystemClock.elapsedRealtime() < deadline) {
             delay(pollingInterval * 1_000L)
 
-            val response = postForm(
-                url = ACCESS_TOKEN_URL,
-                fields = mapOf(
-                    "client_id" to clientId,
-                    "device_code" to authorization.deviceCode,
-                    "grant_type" to DEVICE_CODE_GRANT_TYPE
+            val response = try {
+                postForm(
+                    url = ACCESS_TOKEN_URL,
+                    fields = mapOf(
+                        "client_id" to clientId,
+                        "device_code" to authorization.deviceCode,
+                        "grant_type" to DEVICE_CODE_GRANT_TYPE
+                    )
                 )
-            )
+            } catch (error: IOException) {
+                if (error is GitHubOAuthException) {
+                    throw error
+                }
+
+                // DNS, timeout and connection failures can happen briefly when the app resumes
+                // after the browser authorization step. Keep the approved device code alive and
+                // retry instead of immediately discarding the sign-in attempt.
+                lastNetworkFailure = error
+                delay(networkRetryDelayMillis)
+                networkRetryDelayMillis = (networkRetryDelayMillis * 2)
+                    .coerceAtMost(MAX_NETWORK_RETRY_DELAY_MILLIS)
+                continue
+            }
+
+            lastNetworkFailure = null
+            networkRetryDelayMillis = INITIAL_NETWORK_RETRY_DELAY_MILLIS
 
             val accessToken = response.optString("access_token")
             if (accessToken.isNotBlank()) {
@@ -97,8 +117,47 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
             }
         }
 
+        if (lastNetworkFailure != null) {
+            throw GitHubNetworkException(
+                message = NETWORK_ERROR_MESSAGE,
+                cause = lastNetworkFailure
+            )
+        }
+
         throw GitHubOAuthException(
             "The GitHub authorization code expired. Start the sign-in process again."
+        )
+    }
+
+    private suspend fun postFormWithRetry(
+        url: String,
+        fields: Map<String, String>
+    ): JSONObject {
+        var attempt = 0
+        var retryDelayMillis = INITIAL_NETWORK_RETRY_DELAY_MILLIS
+        var lastNetworkFailure: IOException? = null
+
+        while (attempt < INITIAL_REQUEST_MAX_ATTEMPTS) {
+            try {
+                return postForm(url, fields)
+            } catch (error: IOException) {
+                if (error is GitHubOAuthException) {
+                    throw error
+                }
+
+                lastNetworkFailure = error
+                attempt += 1
+                if (attempt < INITIAL_REQUEST_MAX_ATTEMPTS) {
+                    delay(retryDelayMillis)
+                    retryDelayMillis = (retryDelayMillis * 2)
+                        .coerceAtMost(MAX_NETWORK_RETRY_DELAY_MILLIS)
+                }
+            }
+        }
+
+        throw GitHubNetworkException(
+            message = NETWORK_ERROR_MESSAGE,
+            cause = lastNetworkFailure
         )
     }
 
@@ -165,12 +224,22 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
         const val DEVICE_CODE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:device_code"
         const val OAUTH_SCOPES = "repo workflow read:user read:org notifications"
         const val USER_AGENT = "Rock-Release-Hub-Android"
+        const val NETWORK_ERROR_MESSAGE =
+            "Android could not reach github.com. Check Wi-Fi or mobile data, and disable any broken VPN or Private DNS setting, then try again."
         const val NETWORK_TIMEOUT_MILLIS = 15_000
         const val DEFAULT_EXPIRY_SECONDS = 900L
         const val DEFAULT_INTERVAL_SECONDS = 5L
         const val MINIMUM_INTERVAL_SECONDS = 5L
         const val SLOW_DOWN_INCREMENT_SECONDS = 5L
+        const val INITIAL_REQUEST_MAX_ATTEMPTS = 4
+        const val INITIAL_NETWORK_RETRY_DELAY_MILLIS = 2_000L
+        const val MAX_NETWORK_RETRY_DELAY_MILLIS = 30_000L
     }
 }
 
 class GitHubOAuthException(message: String) : IOException(message)
+
+class GitHubNetworkException(
+    message: String,
+    cause: Throwable? = null
+) : IOException(message, cause)
