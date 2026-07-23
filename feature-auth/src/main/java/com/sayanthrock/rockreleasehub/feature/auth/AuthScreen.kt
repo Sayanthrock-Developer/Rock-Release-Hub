@@ -40,139 +40,153 @@ fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
 
     Surface(modifier = Modifier.fillMaxSize()) {
         when (val state = uiState) {
-            AuthState.Idle -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Connect GitHub",
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Authorize Rock Release Hub securely with GitHub Device Flow.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(onClick = viewModel::initiateLogin) {
-                        Text("Sign in with GitHub")
-                    }
-                }
-            }
-
+            AuthState.Idle -> IdleScreen(onLoginClick = viewModel::initiateLogin)
             AuthState.Loading -> LoadingScreen()
-
-            is AuthState.DeviceFlowInitiated -> {
-                val expiryMinutes = ceil(state.expiresInSeconds / 60.0).toInt()
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Authorize this device",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Open GitHub and enter this one-time code:",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text(
-                        text = state.userCode,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
-                    ) {
-                        Button(
-                            onClick = {
-                                context.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse(state.verificationUri))
-                                )
-                            }
-                        ) {
-                            Text("Open GitHub")
-                        }
-                        OutlinedButton(
-                            onClick = {
-                                clipboardManager.setText(AnnotatedString(state.userCode))
-                            }
-                        ) {
-                            Text("Copy code")
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(24.dp))
-                    CircularProgressIndicator(modifier = Modifier.size(28.dp))
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Waiting for GitHub authorization…",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = "Temporary DNS or network interruptions are retried automatically. The code expires in about $expiryMinutes minutes.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    TextButton(onClick = viewModel::cancelLogin) {
-                        Text("Cancel")
-                    }
-                }
-            }
-
-            is AuthState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "GitHub sign-in failed",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = state.message,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Button(onClick = viewModel::retryLogin) {
-                            Text("Try again")
-                        }
-                    }
-                }
-            }
-
+            is AuthState.DeviceFlowInitiated -> DeviceFlowScreen(
+                state = state,
+                onCancelClick = viewModel::cancelLogin
+            )
+            is AuthState.Error -> ErrorScreen(
+                message = state.message,
+                onRetryClick = viewModel::retryLogin
+            )
             AuthState.Success -> {
                 LaunchedEffect(Unit) {
                     onAuthSuccess()
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IdleScreen(onLoginClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Connect GitHub",
+            style = MaterialTheme.typography.headlineMedium
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Authorize Rock Release Hub securely with GitHub Device Flow.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(onClick = onLoginClick) {
+            Text("Sign in with GitHub")
+        }
+    }
+}
+
+@Composable
+private fun DeviceFlowScreen(
+    state: AuthState.DeviceFlowInitiated,
+    onCancelClick: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val expiryMinutes = ceil(state.expiresInSeconds / 60.0).toInt()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Authorize this device",
+            style = MaterialTheme.typography.headlineSmall
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Open GitHub and enter this one-time code:",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = state.userCode,
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
+        ) {
+            Button(
+                onClick = {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse(state.verificationUri))
+                    )
+                }
+            ) {
+                Text("Open GitHub")
+            }
+            OutlinedButton(
+                onClick = {
+                    clipboardManager.setText(AnnotatedString(state.userCode))
+                }
+            ) {
+                Text("Copy code")
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        CircularProgressIndicator(modifier = Modifier.size(28.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Waiting for GitHub authorization…",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "Temporary DNS or network interruptions are retried automatically. The code expires in about $expiryMinutes minutes.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        TextButton(onClick = onCancelClick) {
+            Text("Cancel")
+        }
+    }
+}
+
+@Composable
+private fun ErrorScreen(message: String, onRetryClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "GitHub sign-in failed",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Button(onClick = onRetryClick) {
+                Text("Try again")
             }
         }
     }
