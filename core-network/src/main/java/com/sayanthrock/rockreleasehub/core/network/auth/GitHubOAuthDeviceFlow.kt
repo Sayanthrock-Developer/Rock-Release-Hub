@@ -133,32 +133,25 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
         url: String,
         fields: Map<String, String>
     ): JSONObject {
-        var attempt = 0
-        var retryDelayMillis = INITIAL_NETWORK_RETRY_DELAY_MILLIS
-        var lastNetworkFailure: IOException? = null
-
-        while (attempt < INITIAL_REQUEST_MAX_ATTEMPTS) {
-            try {
-                return postForm(url, fields)
-            } catch (error: IOException) {
-                if (error is GitHubOAuthException) {
-                    throw error
-                }
-
-                lastNetworkFailure = error
-                attempt += 1
-                if (attempt < INITIAL_REQUEST_MAX_ATTEMPTS) {
-                    delay(retryDelayMillis)
-                    retryDelayMillis = (retryDelayMillis * 2)
-                        .coerceAtMost(MAX_NETWORK_RETRY_DELAY_MILLIS)
-                }
+        try {
+            return com.sayanthrock.rockreleasehub.core.network.retryIO(
+                times = INITIAL_REQUEST_MAX_ATTEMPTS,
+                initialDelay = INITIAL_NETWORK_RETRY_DELAY_MILLIS,
+                maxDelay = MAX_NETWORK_RETRY_DELAY_MILLIS,
+                factor = 2.0,
+                shouldRetry = { it is IOException && it !is GitHubOAuthException }
+            ) {
+                postForm(url, fields)
             }
+        } catch (error: IOException) {
+            if (error is GitHubOAuthException) {
+                throw error
+            }
+            throw GitHubNetworkException(
+                message = NETWORK_ERROR_MESSAGE,
+                cause = error
+            )
         }
-
-        throw GitHubNetworkException(
-            message = NETWORK_ERROR_MESSAGE,
-            cause = lastNetworkFailure
-        )
     }
 
     private fun postForm(url: String, fields: Map<String, String>): JSONObject {
