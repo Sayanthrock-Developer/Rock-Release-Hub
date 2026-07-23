@@ -7,8 +7,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.sayanthrock.rockreleasehub.core.designsystem.component.LoadingScreen
+import com.sayanthrock.rockreleasehub.feature.downloads.DownloadWorker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -16,6 +20,7 @@ fun UpdateScreen(
     viewModel: UpdateViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("App Updates") })
@@ -28,7 +33,10 @@ fun UpdateScreen(
                 is UpdateState.UpdateAvailable -> {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Update Available: \${state.version}")
-                        Button(onClick = { /* Download */ }) { Text("Download") }
+                        Button(onClick = {
+                            val workRequest = OneTimeWorkRequestBuilder<DownloadWorker>().build()
+                            WorkManager.getInstance(context).enqueue(workRequest)
+                        }) { Text("Download") }
                     }
                 }
                 is UpdateState.Error -> Text(state.message, color = MaterialTheme.colorScheme.error)

@@ -39,6 +39,9 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.hilt.navigation.compose)
 
+    implementation(project(":feature-downloads"))
+    implementation(libs.androidx.work.runtime.ktx)
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 }
