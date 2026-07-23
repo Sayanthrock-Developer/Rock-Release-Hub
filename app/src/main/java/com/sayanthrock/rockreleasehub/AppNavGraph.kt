@@ -17,6 +17,7 @@ import com.sayanthrock.rockreleasehub.feature.home.HomeScreen
 import com.sayanthrock.rockreleasehub.feature.repositories.RepoListScreen
 import com.sayanthrock.rockreleasehub.feature.repositories.RepoDetailsScreen
 import com.sayanthrock.rockreleasehub.feature.workflows.WorkflowListScreen
+import com.sayanthrock.rockreleasehub.feature.workflows.WorkflowDetailsScreen
 import com.sayanthrock.rockreleasehub.feature.releases.ReleaseListScreen
 import com.sayanthrock.rockreleasehub.feature.downloads.DownloadManagerScreen
 import com.sayanthrock.rockreleasehub.feature.apkinspector.ApkInspectorScreen
@@ -82,7 +83,11 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
                 RepoDetailsScreen(repoId = repoId, onBack = { navController.popBackStack() })
             }
             composable(BottomNavRoute.WORKFLOWS.route) {
-                WorkflowListScreen(onWorkflowClick = { /* Handle click */ })
+                WorkflowListScreen(onWorkflowClick = { workflowId -> navController.navigate("workflowDetails/$workflowId") })
+            }
+            composable("workflowDetails/{workflowId}") { backStackEntry ->
+                val workflowId = backStackEntry.arguments?.getString("workflowId")?.toLongOrNull() ?: return@composable
+                WorkflowDetailsScreen(workflowId = workflowId, onBack = { navController.popBackStack() })
             }
             composable(BottomNavRoute.DOWNLOADS.route) { DownloadManagerScreen() }
             composable(BottomNavRoute.SETTINGS.route) { SettingsScreen() }
