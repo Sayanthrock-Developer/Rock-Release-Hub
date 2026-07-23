@@ -36,14 +36,13 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val bottomNavRoutes = BottomNavRoute.values().map { it.route }
-    val showBottomBar = currentRoute in bottomNavRoutes
+    val showBottomBar = BottomNavRoute.entries.any { it.route == currentRoute }
 
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
-                    BottomNavRoute.values().forEach { navItem ->
+                    BottomNavRoute.entries.forEach { navItem ->
                         NavigationBarItem(
                             icon = { Icon(navItem.icon, contentDescription = navItem.title) },
                             label = { Text(navItem.title) },
