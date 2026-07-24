@@ -68,7 +68,14 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
             delay(pollingInterval * 1_000L)
 
             val response = try {
-                attemptTokenFetch(clientId, authorization.deviceCode)
+                postForm(
+                    url = ACCESS_TOKEN_URL,
+                    fields = mapOf(
+                        "client_id" to clientId,
+                        "device_code" to authorization.deviceCode,
+                        "grant_type" to DEVICE_CODE_GRANT_TYPE
+                    )
+                )
             } catch (error: IOException) {
                 if (error is GitHubOAuthException) {
                     throw error
@@ -92,51 +99,33 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
                 return@withContext accessToken
             }
 
-            pollingInterval += processPollingError(response)
+            when (val error = response.optString("error")) {
+                "authorization_pending" -> Unit
+                "slow_down" -> pollingInterval += SLOW_DOWN_INCREMENT_SECONDS
+                "expired_token" -> throw GitHubOAuthException(
+                    "The GitHub authorization code expired. Start the sign-in process again."
+                )
+                "access_denied" -> throw GitHubOAuthException(
+                    "GitHub authorization was cancelled or denied."
+                )
+                else -> {
+                    val message = response.optString("error_description")
+                        .ifBlank { error }
+                        .ifBlank { "GitHub authorization failed." }
+                    throw GitHubOAuthException(message)
+                }
+            }
         }
 
-        handleTimeout(lastNetworkFailure)
-    }
-
-    private fun handleTimeout(lastNetworkFailure: IOException?): Nothing {
         if (lastNetworkFailure != null) {
             throw GitHubNetworkException(
                 message = NETWORK_ERROR_MESSAGE,
                 cause = lastNetworkFailure
             )
         }
+
         throw GitHubOAuthException(
             "The GitHub authorization code expired. Start the sign-in process again."
-        )
-    }
-
-    private fun processPollingError(response: JSONObject): Long {
-        when (val error = response.optString("error")) {
-            "authorization_pending" -> return 0L
-            "slow_down" -> return SLOW_DOWN_INCREMENT_SECONDS
-            "expired_token" -> throw GitHubOAuthException(
-                "The GitHub authorization code expired. Start the sign-in process again."
-            )
-            "access_denied" -> throw GitHubOAuthException(
-                "GitHub authorization was cancelled or denied."
-            )
-            else -> {
-                val message = response.optString("error_description")
-                    .ifBlank { error }
-                    .ifBlank { "GitHub authorization failed." }
-                throw GitHubOAuthException(message)
-            }
-        }
-    }
-
-    private fun attemptTokenFetch(clientId: String, deviceCode: String): JSONObject {
-        return postForm(
-            url = ACCESS_TOKEN_URL,
-            fields = mapOf(
-                "client_id" to clientId,
-                "device_code" to deviceCode,
-                "grant_type" to DEVICE_CODE_GRANT_TYPE
-            )
         )
     }
 
