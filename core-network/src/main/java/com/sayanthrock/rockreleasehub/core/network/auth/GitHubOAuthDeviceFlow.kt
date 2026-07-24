@@ -155,7 +155,18 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
     }
 
     private fun postForm(url: String, fields: Map<String, String>): JSONObject {
-        val connection = (URL(url).openConnection() as HttpURLConnection).apply {
+        val connection = createPostConnection(url)
+
+        return try {
+            writeFormData(connection, fields)
+            handleResponse(connection)
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun createPostConnection(url: String): HttpURLConnection {
+        return (URL(url).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = NETWORK_TIMEOUT_MILLIS
             readTimeout = NETWORK_TIMEOUT_MILLIS
@@ -165,42 +176,42 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
             setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
             setRequestProperty("User-Agent", USER_AGENT)
         }
+    }
 
-        return try {
-            val body = fields.entries.joinToString("&") { (key, value) ->
-                "${key.urlEncode()}=${value.urlEncode()}"
-            }
-
-            connection.outputStream.use { output ->
-                output.write(body.toByteArray(StandardCharsets.UTF_8))
-            }
-
-            val statusCode = connection.responseCode
-            val stream = if (statusCode in 200..299) {
-                connection.inputStream
-            } else {
-                connection.errorStream
-            }
-            val responseBody = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-
-            if (responseBody.isBlank()) {
-                throw GitHubOAuthException(
-                    "GitHub returned an empty OAuth response (HTTP $statusCode)."
-                )
-            }
-
-            val response = JSONObject(responseBody)
-            if (statusCode !in 200..299) {
-                val message = response.optString("error_description")
-                    .ifBlank { response.optString("message") }
-                    .ifBlank { "GitHub OAuth request failed (HTTP $statusCode)." }
-                throw GitHubOAuthException(message)
-            }
-
-            response
-        } finally {
-            connection.disconnect()
+    private fun writeFormData(connection: HttpURLConnection, fields: Map<String, String>) {
+        val body = fields.entries.joinToString("&") { (key, value) ->
+            "${key.urlEncode()}=${value.urlEncode()}"
         }
+
+        connection.outputStream.use { output ->
+            output.write(body.toByteArray(StandardCharsets.UTF_8))
+        }
+    }
+
+    private fun handleResponse(connection: HttpURLConnection): JSONObject {
+        val statusCode = connection.responseCode
+        val stream = if (statusCode in 200..299) {
+            connection.inputStream
+        } else {
+            connection.errorStream
+        }
+        val responseBody = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+
+        if (responseBody.isBlank()) {
+            throw GitHubOAuthException(
+                "GitHub returned an empty OAuth response (HTTP $statusCode)."
+            )
+        }
+
+        val response = JSONObject(responseBody)
+        if (statusCode !in 200..299) {
+            val message = response.optString("error_description")
+                .ifBlank { response.optString("message") }
+                .ifBlank { "GitHub OAuth request failed (HTTP $statusCode)." }
+            throw GitHubOAuthException(message)
+        }
+
+        return response
     }
 
     private fun JSONObject.requiredString(key: String): String {
