@@ -87,4 +87,14 @@ class KeystoreAccessTokenStoreTest {
         // Assert
         assertNull(result)
     }
+
+    @Test
+    fun `clear calls remove on sharedPreferences`() {
+        // Act
+        store.clear()
+
+        // Assert
+        verify { editor.remove("github_access_token") }
+        verify { editor.apply() }
+    }
 }
