@@ -1,4 +1,5 @@
 [versions]
+turbine = "1.1.0"
 robolectric = "4.12"
 mockk = "1.13.10"
 agp = "8.3.2"
@@ -26,6 +27,7 @@ ksp = "1.9.23-1.0.19"
 coroutines = "1.8.0"
 
 [libraries]
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
