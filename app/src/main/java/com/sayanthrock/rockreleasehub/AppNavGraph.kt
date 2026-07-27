@@ -18,10 +18,7 @@ import com.sayanthrock.rockreleasehub.feature.repositories.RepoListScreen
 import com.sayanthrock.rockreleasehub.feature.repositories.RepoDetailsScreen
 import com.sayanthrock.rockreleasehub.feature.workflows.WorkflowListScreen
 import com.sayanthrock.rockreleasehub.feature.workflows.WorkflowDetailsScreen
-import com.sayanthrock.rockreleasehub.feature.releases.ReleaseListScreen
 import com.sayanthrock.rockreleasehub.feature.downloads.DownloadManagerScreen
-import com.sayanthrock.rockreleasehub.feature.apkinspector.ApkInspectorScreen
-import com.sayanthrock.rockreleasehub.feature.updates.UpdateScreen
 import com.sayanthrock.rockreleasehub.feature.settings.SettingsScreen
 
 enum class BottomNavRoute(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
