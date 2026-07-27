@@ -222,9 +222,9 @@ class GitHubOAuthDeviceFlowGateway @Inject constructor() : OAuthDeviceFlowGatewa
     private fun String.urlEncode(): String =
         URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
 
-    private companion object {
-        const val DEVICE_CODE_URL = "https://github.com/login/device/code"
-        const val ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token"
+    internal companion object {
+        var DEVICE_CODE_URL = "https://github.com/login/device/code"
+        var ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token"
         const val DEVICE_CODE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:device_code"
         const val OAUTH_SCOPES = "repo workflow read:user read:org notifications"
         const val USER_AGENT = "Rock-Release-Hub-Android"
