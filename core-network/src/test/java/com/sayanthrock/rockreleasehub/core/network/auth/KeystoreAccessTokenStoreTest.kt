@@ -5,16 +5,25 @@ import android.content.SharedPreferences
 import android.util.Base64
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
 
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [33])
 class KeystoreAccessTokenStoreTest {
 
     private lateinit var context: Context
@@ -85,5 +94,78 @@ class KeystoreAccessTokenStoreTest {
 
         // Assert
         assertNull(result)
+    }
+
+    @Test
+    fun `saveAccessToken correctly encrypts and saves token`() {
+        // Arrange
+        val mockKeyStore = mockk<KeyStore>(relaxed = true)
+        val mockSecretKey = mockk<SecretKey>(relaxed = true)
+        val mockCipher = mockk<Cipher>(relaxed = true)
+
+        mockkStatic(KeyStore::class)
+        every { KeyStore.getInstance("AndroidKeyStore") } returns mockKeyStore
+        every { mockKeyStore.getKey(any(), any()) } returns mockSecretKey
+
+        mockkStatic(Cipher::class)
+        every { Cipher.getInstance("AES/GCM/NoPadding") } returns mockCipher
+
+        val testIv = ByteArray(12) { 1 }
+        val testEncryptedData = ByteArray(16) { 2 }
+        every { mockCipher.iv } returns testIv
+        every { mockCipher.doFinal(any()) } returns testEncryptedData
+
+        // Act
+        store.saveAccessToken("test_token")
+
+        // Assert
+        verify { mockCipher.init(Cipher.ENCRYPT_MODE, mockSecretKey) }
+
+        val slot = slot<String>()
+        verify { editor.putString("github_access_token", capture(slot)) }
+
+        val expectedPayload = testIv + testEncryptedData
+        val expectedBase64 = Base64.encodeToString(expectedPayload, Base64.NO_WRAP)
+        assertEquals(expectedBase64, slot.captured)
+
+        verify { editor.apply() }
+    }
+
+    @Test
+    fun `saveAccessToken generates key if not found in keystore`() {
+        // Arrange
+        val mockKeyStore = mockk<KeyStore>(relaxed = true)
+        val mockSecretKey = mockk<SecretKey>(relaxed = true)
+        val mockCipher = mockk<Cipher>(relaxed = true)
+        val mockKeyGenerator = mockk<KeyGenerator>(relaxed = true)
+
+        mockkStatic(KeyStore::class)
+        every { KeyStore.getInstance("AndroidKeyStore") } returns mockKeyStore
+        // Simulate key not found
+        every { mockKeyStore.getKey(any(), any()) } returns null
+
+        mockkStatic(KeyGenerator::class)
+        every { KeyGenerator.getInstance(any(), "AndroidKeyStore") } returns mockKeyGenerator
+        every { mockKeyGenerator.generateKey() } returns mockSecretKey
+
+        mockkStatic(Cipher::class)
+        every { Cipher.getInstance(any()) } returns mockCipher
+        every { mockCipher.iv } returns ByteArray(12) { 1 }
+        every { mockCipher.doFinal(any()) } returns ByteArray(16) { 2 }
+
+        // Act
+        store.saveAccessToken("test_token")
+
+        // Assert
+        verify { mockKeyStore.getKey("rock_release_hub_github_oauth_key", null) }
+        verify { mockKeyGenerator.init(any<java.security.spec.AlgorithmParameterSpec>()) }
+        verify { mockKeyGenerator.generateKey() }
+        verify { mockCipher.init(Cipher.ENCRYPT_MODE, mockSecretKey) }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `saveAccessToken throws IllegalArgumentException when token is blank`() {
+        // Act
+        store.saveAccessToken("   ")
     }
 }
