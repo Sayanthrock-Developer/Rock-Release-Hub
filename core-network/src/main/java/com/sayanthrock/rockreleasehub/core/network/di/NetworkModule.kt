@@ -13,6 +13,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import javax.inject.Singleton
+import com.sayanthrock.rockreleasehub.core.network.BuildConfig
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -28,7 +29,7 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(accessTokenStore: AccessTokenStore): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BASIC
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
             redactHeader("Authorization")
         }
 
