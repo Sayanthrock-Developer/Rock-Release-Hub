@@ -5,7 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -34,7 +33,7 @@ enum class BottomNavRoute(val route: String, val title: String, val icon: androi
 
 @Composable
 fun AppNavGraph(navController: NavHostController = rememberNavController()) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
 
     val showBottomBar = BottomNavRoute.entries.any { it.route == currentRoute }
