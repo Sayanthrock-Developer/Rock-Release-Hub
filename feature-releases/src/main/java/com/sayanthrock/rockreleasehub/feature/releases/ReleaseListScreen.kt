@@ -1,3 +1,4 @@
+@file:Suppress("UnusedImport")
 package com.sayanthrock.rockreleasehub.feature.releases
 
 import androidx.compose.foundation.clickable
