@@ -1,9 +1,12 @@
 package com.sayanthrock.rockreleasehub
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -37,57 +40,63 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
 
     val showBottomBar = BottomNavRoute.entries.any { it.route == currentRoute }
 
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                NavigationBar {
-                    BottomNavRoute.entries.forEach { navItem ->
-                        NavigationBarItem(
-                            icon = { Icon(navItem.icon, contentDescription = navItem.title) },
-                            label = { Text(navItem.title) },
-                            selected = currentRoute == navItem.route,
-                            onClick = {
-                                navController.navigate(navItem.route) {
-                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+    if (showBottomBar) {
+        NavigationSuiteScaffold(
+            navigationSuiteItems = {
+                BottomNavRoute.entries.forEach { navItem ->
+                    item(
+                        icon = { Icon(navItem.icon, contentDescription = navItem.title) },
+                        label = { Text(navItem.title) },
+                        selected = currentRoute == navItem.route,
+                        onClick = {
+                            navController.navigate(navItem.route) {
+                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                        )
-                    }
+                        }
+                    )
                 }
             }
-        }
-    ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = "auth",
-            modifier = Modifier.padding(padding)
         ) {
-            composable("auth") {
-                AuthScreen(onAuthSuccess = {
-                    navController.navigate(BottomNavRoute.HOME.route) {
-                        popUpTo("auth") { inclusive = true }
-                    }
-                })
+            Box(modifier = Modifier.fillMaxSize()) {
+                AppNavHost(navController = navController)
             }
-            composable(BottomNavRoute.HOME.route) { HomeScreen() }
-            composable(BottomNavRoute.REPOSITORIES.route) {
-                RepoListScreen(onRepoClick = { repoId -> navController.navigate("repoDetails/\$repoId") })
-            }
-            composable("repoDetails/{repoId}") { backStackEntry ->
-                val repoId = backStackEntry.arguments?.getString("repoId")?.toLongOrNull() ?: return@composable
-                RepoDetailsScreen(repoId = repoId, onBack = { navController.popBackStack() })
-            }
-            composable(BottomNavRoute.WORKFLOWS.route) {
-                WorkflowListScreen(onWorkflowClick = { workflowId -> navController.navigate("workflowDetails/$workflowId") })
-            }
-            composable("workflowDetails/{workflowId}") { backStackEntry ->
-                val workflowId = backStackEntry.arguments?.getString("workflowId")?.toLongOrNull() ?: return@composable
-                WorkflowDetailsScreen(workflowId = workflowId, onBack = { navController.popBackStack() })
-            }
-            composable(BottomNavRoute.DOWNLOADS.route) { DownloadManagerScreen() }
-            composable(BottomNavRoute.SETTINGS.route) { SettingsScreen() }
         }
+    } else {
+        AppNavHost(navController = navController)
+    }
+}
+
+@Composable
+fun AppNavHost(navController: NavHostController) {
+    NavHost(
+        navController = navController,
+        startDestination = "auth"
+    ) {
+        composable("auth") {
+            AuthScreen(onAuthSuccess = {
+                navController.navigate(BottomNavRoute.HOME.route) {
+                    popUpTo("auth") { inclusive = true }
+                }
+            })
+        }
+        composable(BottomNavRoute.HOME.route) { HomeScreen() }
+        composable(BottomNavRoute.REPOSITORIES.route) {
+            RepoListScreen(onRepoClick = { repoId -> navController.navigate("repoDetails/$repoId") })
+        }
+        composable("repoDetails/{repoId}") { backStackEntry ->
+            val repoId = backStackEntry.arguments?.getString("repoId")?.toLongOrNull() ?: return@composable
+            RepoDetailsScreen(repoId = repoId, onBack = { navController.popBackStack() })
+        }
+        composable(BottomNavRoute.WORKFLOWS.route) {
+            WorkflowListScreen(onWorkflowClick = { workflowId -> navController.navigate("workflowDetails/$workflowId") })
+        }
+        composable("workflowDetails/{workflowId}") { backStackEntry ->
+            val workflowId = backStackEntry.arguments?.getString("workflowId")?.toLongOrNull() ?: return@composable
+            WorkflowDetailsScreen(workflowId = workflowId, onBack = { navController.popBackStack() })
+        }
+        composable(BottomNavRoute.DOWNLOADS.route) { DownloadManagerScreen() }
+        composable(BottomNavRoute.SETTINGS.route) { SettingsScreen() }
     }
 }

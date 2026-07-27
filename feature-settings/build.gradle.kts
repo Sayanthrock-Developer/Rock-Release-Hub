@@ -28,6 +28,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core-database"))
     implementation(project(":core-model"))
     implementation(project(":core-common"))
     implementation(project(":core-designsystem"))
@@ -45,4 +46,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
