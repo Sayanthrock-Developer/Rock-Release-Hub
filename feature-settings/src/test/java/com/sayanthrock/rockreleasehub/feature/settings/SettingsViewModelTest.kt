@@ -1,40 +1,77 @@
 package com.sayanthrock.rockreleasehub.feature.settings
 
+import app.cash.turbine.test
+import com.sayanthrock.rockreleasehub.core.database.SettingsRepository
+import com.sayanthrock.rockreleasehub.core.model.AppTheme
+import com.sayanthrock.rockreleasehub.core.model.ThemeMode
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
 
-    @Test
-    fun `initial state is Success with isDarkMode true`() {
-        val viewModel = SettingsViewModel()
-        val currentState = viewModel.uiState.value
+    private val testDispatcher = StandardTestDispatcher()
+    private val settingsRepository: SettingsRepository = mockk(relaxed = true)
 
-        assertTrue(currentState is SettingsState.Success)
-        assertEquals(true, (currentState as SettingsState.Success).isDarkMode)
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+        every { settingsRepository.themeMode } returns flowOf(ThemeMode.DARK)
+        every { settingsRepository.appTheme } returns flowOf(AppTheme.AMOLED_BLACK)
+    }
+
+    @After
+    fun teardown() {
+        Dispatchers.resetMain()
     }
 
     @Test
-    fun `toggleDarkMode changes isDarkMode from true to false`() {
-        val viewModel = SettingsViewModel()
+    fun `initial state resolves to correct theme and mode`() = runTest {
+        val viewModel = SettingsViewModel(settingsRepository)
 
-        viewModel.toggleDarkMode()
+        viewModel.uiState.test {
+            val initialState = awaitItem()
+            assertTrue(initialState is SettingsState.Loading)
 
-        val currentState = viewModel.uiState.value
-        assertTrue(currentState is SettingsState.Success)
-        assertEquals(false, (currentState as SettingsState.Success).isDarkMode)
+            val successState = awaitItem()
+            assertTrue(successState is SettingsState.Success)
+            assertEquals(ThemeMode.DARK, (successState as SettingsState.Success).themeMode)
+            assertEquals(AppTheme.AMOLED_BLACK, successState.appTheme)
+        }
     }
 
     @Test
-    fun `toggleDarkMode twice changes isDarkMode back to true`() {
-        val viewModel = SettingsViewModel()
+    fun `setThemeMode calls repository`() = runTest {
+        val viewModel = SettingsViewModel(settingsRepository)
 
-        viewModel.toggleDarkMode() // toggles to false
-        viewModel.toggleDarkMode() // toggles back to true
+        viewModel.setThemeMode(ThemeMode.LIGHT)
+        advanceUntilIdle()
 
-        val currentState = viewModel.uiState.value
-        assertTrue(currentState is SettingsState.Success)
-        assertEquals(true, (currentState as SettingsState.Success).isDarkMode)
+        coVerify { settingsRepository.setThemeMode(ThemeMode.LIGHT) }
+    }
+
+    @Test
+    fun `setAppTheme calls repository`() = runTest {
+        val viewModel = SettingsViewModel(settingsRepository)
+
+        viewModel.setAppTheme(AppTheme.SUNSET_ALLOY)
+        advanceUntilIdle()
+
+        coVerify { settingsRepository.setAppTheme(AppTheme.SUNSET_ALLOY) }
     }
 }

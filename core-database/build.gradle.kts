@@ -22,6 +22,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.datastore.preferences)
     implementation(project(":core-model"))
 
     implementation(libs.androidx.room.runtime)

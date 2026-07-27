@@ -26,13 +26,14 @@ android {
 }
 
 dependencies {
+    implementation(project(":core-model"))
+
     implementation(platform(libs.androidx.compose.bom))
     api(libs.androidx.ui)
     api(libs.androidx.ui.graphics)
     api(libs.androidx.ui.tooling.preview)
     api(libs.androidx.material3)
     debugApi(libs.androidx.ui.tooling)
-}
-dependencies {
+
     implementation(libs.androidx.core.ktx)
 }
