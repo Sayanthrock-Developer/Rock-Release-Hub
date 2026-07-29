@@ -47,6 +47,7 @@ class GitHubOAuthDeviceFlowGatewayTest {
             caughtException?.message
         )
         assertTrue(caughtException?.cause is GitHubNetworkException)
+        assertTrue(caughtException?.cause?.cause is IOException)
         assertEquals("Simulated network failure", caughtException?.cause?.cause?.message)
 
         verify(exactly = 4) {
