@@ -4,7 +4,7 @@ import io.mockk.every
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -28,7 +28,7 @@ class GitHubOAuthDeviceFlowGatewayTest {
     }
 
     @Test
-    fun `postFormWithRetry throws GitHubNetworkException on persistent network failure`() = runBlocking {
+    fun `postFormWithRetry throws GitHubNetworkException on persistent network failure`() = runTest {
         val ioException = IOException("Simulated network failure")
         every {
             gateway invoke "postForm" withArguments listOf(any<String>(), any<Map<String, String>>())
@@ -36,9 +36,7 @@ class GitHubOAuthDeviceFlowGatewayTest {
 
         var caughtException: Exception? = null
         try {
-            runBlocking {
-                gateway.requestAuthorization("test_client_id")
-            }
+            gateway.requestAuthorization("test_client_id")
         } catch (e: Exception) {
             caughtException = e
         }
@@ -57,7 +55,7 @@ class GitHubOAuthDeviceFlowGatewayTest {
     }
 
     @Test
-    fun `postFormWithRetry throws GitHubOAuthException immediately without retry`() = runBlocking {
+    fun `postFormWithRetry throws GitHubOAuthException immediately without retry`() = runTest {
         val oauthException = GitHubOAuthException("OAuth error")
         every {
             gateway invoke "postForm" withArguments listOf(any<String>(), any<Map<String, String>>())
@@ -65,9 +63,7 @@ class GitHubOAuthDeviceFlowGatewayTest {
 
         var caughtException: Exception? = null
         try {
-            runBlocking {
-                gateway.requestAuthorization("test_client_id")
-            }
+            gateway.requestAuthorization("test_client_id")
         } catch (e: Exception) {
             caughtException = e
         }
