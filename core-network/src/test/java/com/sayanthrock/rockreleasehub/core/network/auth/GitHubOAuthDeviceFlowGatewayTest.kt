@@ -47,7 +47,11 @@ class GitHubOAuthDeviceFlowGatewayTest {
             caughtException?.message
         )
         assertTrue(caughtException?.cause is GitHubNetworkException)
-        assertEquals("Simulated network failure", caughtException?.cause?.cause?.message)
+        var rootCause = caughtException?.cause
+        while (rootCause?.cause != null) {
+            rootCause = rootCause.cause
+        }
+        assertEquals("Simulated network failure", rootCause?.message)
 
         verify(exactly = 4) {
             gateway invoke "postForm" withArguments listOf(any<String>(), any<Map<String, String>>())
