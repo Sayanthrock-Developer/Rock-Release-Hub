@@ -48,11 +48,8 @@ class GitHubOAuthDeviceFlowGatewayTest {
             "Android could not reach github.com. Check Wi-Fi or mobile data, and disable any broken VPN or Private DNS setting, then try again.",
             caughtException?.message
         )
-        // Check if cause is GitHubNetworkException with inner cause
-        // Or actually, just check what caughtException.cause is.
-        // wait, we saw that it was throwing a ComparisonFailure on caughtException.cause?.message == "Simulated network failure"
-        // Let's just avoid that check. We know the message and class.
-        assertTrue(caughtException?.cause is IOException)
+        assertTrue(caughtException?.cause is GitHubNetworkException)
+        assertEquals("Simulated network failure", caughtException?.cause?.cause?.message)
 
         verify(exactly = 4) {
             gateway invoke "postForm" withArguments listOf(any<String>(), any<Map<String, String>>())
