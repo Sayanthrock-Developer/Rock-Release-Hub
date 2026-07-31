@@ -72,7 +72,7 @@ private fun ThemeModeSelector(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            ThemeMode.entries.forEach { mode ->
+            for (mode in ThemeMode.entries) {
                 DropdownMenuItem(
                     text = { Text(mode.name) },
                     onClick = {
@@ -108,7 +108,7 @@ private fun AppThemeSelector(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            AppTheme.entries.forEach { theme ->
+            for (theme in AppTheme.entries) {
                 DropdownMenuItem(
                     text = { Text(theme.name) },
                     onClick = {
