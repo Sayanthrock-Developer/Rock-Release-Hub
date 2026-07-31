@@ -43,20 +43,44 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
     if (showBottomBar) {
         NavigationSuiteScaffold(
             navigationSuiteItems = {
-                BottomNavRoute.entries.forEach { navItem ->
-                    item(
-                        icon = { Icon(navItem.icon, contentDescription = navItem.title) },
-                        label = { Text(navItem.title) },
-                        selected = currentRoute == navItem.route,
-                        onClick = {
-                            navController.navigate(navItem.route) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
+                val navigateTo = { route: String ->
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
+
+                item(
+                    icon = { Icon(BottomNavRoute.HOME.icon, contentDescription = BottomNavRoute.HOME.title) },
+                    label = { Text(BottomNavRoute.HOME.title) },
+                    selected = currentRoute == BottomNavRoute.HOME.route,
+                    onClick = { navigateTo(BottomNavRoute.HOME.route) }
+                )
+                item(
+                    icon = { Icon(BottomNavRoute.REPOSITORIES.icon, contentDescription = BottomNavRoute.REPOSITORIES.title) },
+                    label = { Text(BottomNavRoute.REPOSITORIES.title) },
+                    selected = currentRoute == BottomNavRoute.REPOSITORIES.route,
+                    onClick = { navigateTo(BottomNavRoute.REPOSITORIES.route) }
+                )
+                item(
+                    icon = { Icon(BottomNavRoute.WORKFLOWS.icon, contentDescription = BottomNavRoute.WORKFLOWS.title) },
+                    label = { Text(BottomNavRoute.WORKFLOWS.title) },
+                    selected = currentRoute == BottomNavRoute.WORKFLOWS.route,
+                    onClick = { navigateTo(BottomNavRoute.WORKFLOWS.route) }
+                )
+                item(
+                    icon = { Icon(BottomNavRoute.DOWNLOADS.icon, contentDescription = BottomNavRoute.DOWNLOADS.title) },
+                    label = { Text(BottomNavRoute.DOWNLOADS.title) },
+                    selected = currentRoute == BottomNavRoute.DOWNLOADS.route,
+                    onClick = { navigateTo(BottomNavRoute.DOWNLOADS.route) }
+                )
+                item(
+                    icon = { Icon(BottomNavRoute.SETTINGS.icon, contentDescription = BottomNavRoute.SETTINGS.title) },
+                    label = { Text(BottomNavRoute.SETTINGS.title) },
+                    selected = currentRoute == BottomNavRoute.SETTINGS.route,
+                    onClick = { navigateTo(BottomNavRoute.SETTINGS.route) }
+                )
             }
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
