@@ -15,8 +15,7 @@ fun main() {
     var baselineTime = 0L
     for(i in 1..100000) {
         baselineTime += measureNanoTime {
-            val bottomNavRoutes = BottomNavRoute.entries.map { it.route }
-            val showBottomBar = currentRoute in bottomNavRoutes
+            val showBottomBar = BottomNavRoute.entries.any { it.route == currentRoute }
             var count = 0
             BottomNavRoute.entries.forEach { navItem ->
                 count++
