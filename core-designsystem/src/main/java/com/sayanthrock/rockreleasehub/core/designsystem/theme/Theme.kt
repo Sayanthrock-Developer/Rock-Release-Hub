@@ -128,7 +128,7 @@ private val SunsetAlloyLightColorScheme = lightColorScheme(
 
 private fun getAppColorScheme(appTheme: AppTheme, isDark: Boolean): ColorScheme {
     return when (appTheme) {
-        AppTheme.ROCK_OBSIDIAN, AppTheme.ROCK_OBSIDIAN -> if (isDark) RockObsidianDarkColorScheme else RockObsidianLightColorScheme
+        AppTheme.ROCK_OBSIDIAN -> if (isDark) RockObsidianDarkColorScheme else RockObsidianLightColorScheme
         AppTheme.AMOLED_BLACK -> if (isDark) AmoledBlackDarkColorScheme else AmoledBlackLightColorScheme
         AppTheme.ARCTIC_LIGHT -> if (isDark) ArcticLightDarkColorScheme else ArcticLightLightColorScheme
         AppTheme.LIQUID_GRAPHITE -> if (isDark) LiquidGraphiteDarkColorScheme else LiquidGraphiteLightColorScheme
