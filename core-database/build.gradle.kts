@@ -40,4 +40,5 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.room.ktx)
     testImplementation(libs.androidx.room.testing)
+    testImplementation(libs.turbine)
 }
