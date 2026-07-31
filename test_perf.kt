@@ -17,10 +17,7 @@ fun main() {
         baselineTime += measureNanoTime {
             val bottomNavRoutes = BottomNavRoute.entries.map { it.route }
             val showBottomBar = currentRoute in bottomNavRoutes
-            var count = 0
-            BottomNavRoute.entries.forEach { navItem ->
-                count++
-            }
+            val count = BottomNavRoute.entries.size
         }
     }
 
@@ -29,10 +26,7 @@ fun main() {
     for(i in 1..100000) {
         optimizedTime += measureNanoTime {
             val showBottomBar = BottomNavRoute.entries.any { it.route == currentRoute }
-            var count = 0
-            BottomNavRoute.entries.forEach { navItem ->
-                count++
-            }
+            val count = BottomNavRoute.entries.size
         }
     }
 
