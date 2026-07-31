@@ -1,6 +1,8 @@
 package com.sayanthrock.rockreleasehub.feature.auth
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.widget.Toast
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -129,9 +131,13 @@ private fun DeviceFlowScreen(
         ) {
             Button(
                 onClick = {
-                    context.startActivity(
-                        Intent(Intent.ACTION_VIEW, Uri.parse(state.verificationUri))
-                    )
+                    try {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(state.verificationUri))
+                        )
+                    } catch (e: ActivityNotFoundException) {
+                        Toast.makeText(context, "No browser found to open link", Toast.LENGTH_SHORT).show()
+                    }
                 }
             ) {
                 Text("Open GitHub")
