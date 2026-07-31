@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sayanthrock.rockreleasehub.core.designsystem.component.LoadingScreen
 import com.sayanthrock.rockreleasehub.core.model.AppTheme
@@ -72,7 +73,7 @@ private fun ThemeModeSelector(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            ThemeMode.entries.forEach { mode ->
+            ThemeMode.entries.fastForEach { mode ->
                 DropdownMenuItem(
                     text = { Text(mode.name) },
                     onClick = {
@@ -108,7 +109,7 @@ private fun AppThemeSelector(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            AppTheme.entries.forEach { theme ->
+            AppTheme.entries.fastForEach { theme ->
                 DropdownMenuItem(
                     text = { Text(theme.name) },
                     onClick = {
