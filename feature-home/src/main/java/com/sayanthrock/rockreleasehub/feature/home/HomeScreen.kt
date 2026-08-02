@@ -42,14 +42,7 @@ fun HomeScreen(
                         fontSize = 24.sp
                     )
                 },
-                actions = {
-                    IconButton(onClick = { /* TODO */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreHoriz,
-                            contentDescription = "More options"
-                        )
-                    }
-                }
+                actions = {}
             )
         }
     ) { padding ->
