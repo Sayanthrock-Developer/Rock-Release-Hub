@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
@@ -25,12 +28,12 @@ import com.sayanthrock.rockreleasehub.feature.downloads.DownloadManagerScreen
 import com.sayanthrock.rockreleasehub.feature.updates.UpdateScreen
 import com.sayanthrock.rockreleasehub.feature.settings.SettingsScreen
 
-enum class BottomNavRoute(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    HOME("home", "Home", Icons.Default.Home),
-    REPOSITORIES("repositories", "Repos", Icons.Default.List),
-    WORKFLOWS("workflows", "Workflows", Icons.Default.PlayArrow),
-    DOWNLOADS("downloads", "Downloads", Icons.Default.KeyboardArrowDown),
-    SETTINGS("settings", "Settings", Icons.Default.Settings)
+enum class BottomNavRoute(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val outlinedIcon: androidx.compose.ui.graphics.vector.ImageVector) {
+    HOME("home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
+    REPOSITORIES("repositories", "Repos", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
+    WORKFLOWS("workflows", "Workflows", Icons.Filled.PlayArrow, Icons.Outlined.PlayArrow),
+    DOWNLOADS("downloads", "Downloads", Icons.Filled.KeyboardArrowDown, Icons.Outlined.KeyboardArrowDown),
+    SETTINGS("settings", "Settings", Icons.Filled.Settings, Icons.Outlined.Settings)
 }
 
 @Composable
@@ -52,31 +55,31 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
                 }
 
                 item(
-                    icon = { Icon(BottomNavRoute.HOME.icon, contentDescription = BottomNavRoute.HOME.title) },
+                    icon = { Icon(if (currentRoute == BottomNavRoute.HOME.route) BottomNavRoute.HOME.icon else BottomNavRoute.HOME.outlinedIcon, contentDescription = BottomNavRoute.HOME.title) },
                     label = { Text(BottomNavRoute.HOME.title) },
                     selected = currentRoute == BottomNavRoute.HOME.route,
                     onClick = { navigateTo(BottomNavRoute.HOME.route) }
                 )
                 item(
-                    icon = { Icon(BottomNavRoute.REPOSITORIES.icon, contentDescription = BottomNavRoute.REPOSITORIES.title) },
+                    icon = { Icon(if (currentRoute == BottomNavRoute.REPOSITORIES.route) BottomNavRoute.REPOSITORIES.icon else BottomNavRoute.REPOSITORIES.outlinedIcon, contentDescription = BottomNavRoute.REPOSITORIES.title) },
                     label = { Text(BottomNavRoute.REPOSITORIES.title) },
                     selected = currentRoute == BottomNavRoute.REPOSITORIES.route,
                     onClick = { navigateTo(BottomNavRoute.REPOSITORIES.route) }
                 )
                 item(
-                    icon = { Icon(BottomNavRoute.WORKFLOWS.icon, contentDescription = BottomNavRoute.WORKFLOWS.title) },
+                    icon = { Icon(if (currentRoute == BottomNavRoute.WORKFLOWS.route) BottomNavRoute.WORKFLOWS.icon else BottomNavRoute.WORKFLOWS.outlinedIcon, contentDescription = BottomNavRoute.WORKFLOWS.title) },
                     label = { Text(BottomNavRoute.WORKFLOWS.title) },
                     selected = currentRoute == BottomNavRoute.WORKFLOWS.route,
                     onClick = { navigateTo(BottomNavRoute.WORKFLOWS.route) }
                 )
                 item(
-                    icon = { Icon(BottomNavRoute.DOWNLOADS.icon, contentDescription = BottomNavRoute.DOWNLOADS.title) },
+                    icon = { Icon(if (currentRoute == BottomNavRoute.DOWNLOADS.route) BottomNavRoute.DOWNLOADS.icon else BottomNavRoute.DOWNLOADS.outlinedIcon, contentDescription = BottomNavRoute.DOWNLOADS.title) },
                     label = { Text(BottomNavRoute.DOWNLOADS.title) },
                     selected = currentRoute == BottomNavRoute.DOWNLOADS.route,
                     onClick = { navigateTo(BottomNavRoute.DOWNLOADS.route) }
                 )
                 item(
-                    icon = { Icon(BottomNavRoute.SETTINGS.icon, contentDescription = BottomNavRoute.SETTINGS.title) },
+                    icon = { Icon(if (currentRoute == BottomNavRoute.SETTINGS.route) BottomNavRoute.SETTINGS.icon else BottomNavRoute.SETTINGS.outlinedIcon, contentDescription = BottomNavRoute.SETTINGS.title) },
                     label = { Text(BottomNavRoute.SETTINGS.title) },
                     selected = currentRoute == BottomNavRoute.SETTINGS.route,
                     onClick = { navigateTo(BottomNavRoute.SETTINGS.route) }
@@ -105,7 +108,7 @@ fun AppNavHost(navController: NavHostController) {
                 }
             })
         }
-        composable(BottomNavRoute.HOME.route) { HomeScreen() }
+        composable(BottomNavRoute.HOME.route) { HomeScreen(onRepoClick = { repoId -> navController.navigate("repoDetails/$repoId") }) }
         composable(BottomNavRoute.REPOSITORIES.route) {
             RepoListScreen(onRepoClick = { repoId -> navController.navigate("repoDetails/$repoId") })
         }
