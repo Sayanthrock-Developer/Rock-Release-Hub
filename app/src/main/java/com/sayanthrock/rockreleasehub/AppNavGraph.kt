@@ -30,10 +30,10 @@ import com.sayanthrock.rockreleasehub.feature.settings.SettingsScreen
 
 enum class BottomNavRoute(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val outlinedIcon: androidx.compose.ui.graphics.vector.ImageVector) {
     HOME("home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
-    REPOSITORIES("repositories", "Repos", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
-    WORKFLOWS("workflows", "Workflows", Icons.Filled.PlayArrow, Icons.Outlined.PlayArrow),
-    DOWNLOADS("downloads", "Downloads", Icons.Filled.KeyboardArrowDown, Icons.Outlined.KeyboardArrowDown),
-    SETTINGS("settings", "Settings", Icons.Filled.Settings, Icons.Outlined.Settings)
+    REPOSITORIES("repositories", "Repositories", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
+    WORKFLOWS("workflows", "Actions", Icons.Filled.PlayArrow, Icons.Outlined.PlayArrow),
+    DOWNLOADS("downloads", "Explore", Icons.Filled.KeyboardArrowDown, Icons.Outlined.KeyboardArrowDown),
+    SETTINGS("settings", "Profile", Icons.Filled.Settings, Icons.Outlined.Settings)
 }
 
 @Composable
