@@ -6,7 +6,7 @@ plugins {
 }
 
 val githubClientId = providers.gradleProperty("GITHUB_CLIENT_ID")
-    .orElse("")
+    .orElse("Ov23liqwsog4A61HCRXB")
     .get()
 
 android {
