@@ -5,9 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-val githubClientId = providers.gradleProperty("GITHUB_CLIENT_ID")
-    .orElse("")
-    .get()
+val githubClientId = providers.gradleProperty("GITHUB_CLIENT_ID").orNull ?: ""
 
 android {
     namespace = "com.sayanthrock.rockreleasehub.feature.auth"
